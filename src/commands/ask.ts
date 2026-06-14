@@ -3,36 +3,37 @@ import ora from 'ora'
 import { loadConfig } from '../utils/config'
 import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
+import { buildContext } from '../context/assemble'
 
 export function registerAsk(program: Command): void {
   program
     .command('ask')
-    .description('Ask a question and stream the answer from the configured model.')
-    .argument('<prompt>', 'the question or task to send to the model')
+    .description('Ask a question and stream the answer. Supports @file, @diff, @selection.')
+    .argument('<prompt>', 'the question or task — use @file <path>, @diff, @selection for context')
     .action(async (prompt: string) => {
       const cfg = loadConfig()
       const client = createModelClient(cfg)
+
+      const { cleanPrompt, systemContext, warnings } = buildContext(prompt, cfg)
+
+      for (const w of warnings) logger.warn(w)
+
+      const messages: { role: 'system' | 'user'; content: string }[] = []
+      if (systemContext) messages.push({ role: 'system', content: systemContext })
+      messages.push({ role: 'user', content: cleanPrompt })
 
       const spinner = cfg.ui.spinner ? ora({ text: 'Thinking…', color: 'cyan' }).start() : null
 
       try {
         let firstToken = true
-        for await (const token of client.chat({
-          messages: [{ role: 'user', content: prompt }],
-        })) {
+        for await (const token of client.chat({ messages })) {
           if (firstToken) {
             if (spinner) spinner.stop()
             firstToken = false
           }
-          if (cfg.ui.streaming) {
-            process.stdout.write(token.text)
-          } else {
-            // Buffered — collect and print at the end (handled below via streaming flag)
-            process.stdout.write(token.text)
-          }
+          process.stdout.write(token.text)
           if (token.done) break
         }
-        // Ensure the response ends on its own line
         if (!firstToken) process.stdout.write('\n')
       } catch (err) {
         if (spinner) spinner.stop()
