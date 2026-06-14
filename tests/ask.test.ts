@@ -107,12 +107,13 @@ describe('createModelClient', () => {
     expect(client).toBeInstanceOf(OllamaProvider)
   })
 
-  it('throws for unsupported providers', () => {
+  it('supports remote provider (returns a FallbackClient)', () => {
     const cfg: KarigarConfig = {
       ...defaultConfig,
-      model: { ...defaultConfig.model, provider: 'remote' },
+      model: { ...defaultConfig.model, provider: 'remote', baseUrl: 'https://example.com' },
     }
-    expect(() => createModelClient(cfg)).toThrow('not yet supported')
+    const client = createModelClient(cfg)
+    expect(typeof client.chat).toBe('function')
   })
 })
 

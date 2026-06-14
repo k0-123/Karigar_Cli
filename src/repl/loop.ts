@@ -7,6 +7,7 @@ import { createModelClient } from '../model/client'
 import { buildContext } from '../context/assemble'
 import { createSession, addToHistory, clearHistory } from './session'
 import { SYSTEM_BASE } from '../prompts/templates'
+import { classifyTier } from '../classifier/tier'
 import type { ChatMessage } from '../model/types'
 
 const PROMPT = chalk.cyan('karigar') + chalk.dim(' › ')
@@ -26,7 +27,6 @@ ${chalk.bold('Slash commands:')}
 
 export async function startRepl(): Promise<void> {
   const cfg = loadConfig()
-  const client = createModelClient(cfg)
   const session = createSession(cfg.model.name)
 
   logger.brand('Karigar ⚒')
@@ -67,6 +67,9 @@ export async function startRepl(): Promise<void> {
 
     const { cleanPrompt, systemContext, warnings } = buildContext(input, cfg)
     for (const w of warnings) logger.warn(w)
+
+    const { tier } = classifyTier(input)
+    const client = createModelClient(cfg, tier)
 
     const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_BASE }]
     if (systemContext) messages.push({ role: 'system', content: systemContext })

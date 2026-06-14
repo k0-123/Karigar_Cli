@@ -4,6 +4,7 @@ import { loadConfig } from '../utils/config'
 import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
 import { buildContext } from '../context/assemble'
+import { classifyTier } from '../classifier/tier'
 
 export function registerAsk(program: Command): void {
   program
@@ -12,7 +13,8 @@ export function registerAsk(program: Command): void {
     .argument('<prompt>', 'the question or task — use @file <path>, @diff, @selection for context')
     .action(async (prompt: string) => {
       const cfg = loadConfig()
-      const client = createModelClient(cfg)
+      const { tier } = classifyTier(prompt)
+      const client = createModelClient(cfg, tier)
 
       const { cleanPrompt, systemContext, warnings } = buildContext(prompt, cfg)
 

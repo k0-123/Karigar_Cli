@@ -6,6 +6,7 @@ import { registerFix } from './commands/fix'
 import { registerExplain } from './commands/explain'
 import { registerTest } from './commands/test'
 import { registerRefactor } from './commands/refactor'
+import { registerConnect } from './commands/connect'
 import { startRepl } from './repl/loop'
 
 export const VERSION = '0.1.0'
@@ -31,6 +32,7 @@ export function createProgram(): Command {
   registerExplain(program)
   registerTest(program)
   registerRefactor(program)
+  registerConnect(program)
 
   // No subcommand → start interactive REPL
   program.action(async () => { await startRepl() })
