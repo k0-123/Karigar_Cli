@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { registerHello } from './commands/hello'
+import { registerAsk } from './commands/ask'
 
 export const VERSION = '0.1.0'
 
@@ -18,6 +19,7 @@ export function createProgram(): Command {
 
   // Command registry — new commands are registered here in later phases.
   registerHello(program)
+  registerAsk(program)
 
   return program
 }
