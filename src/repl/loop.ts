@@ -6,6 +6,8 @@ import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
 import { buildContext } from '../context/assemble'
 import { createSession, addToHistory, clearHistory } from './session'
+import { renderBanner } from './banner'
+import { pickModel } from './models'
 import { SYSTEM_BASE } from '../prompts/templates'
 import { classifyTier } from '../classifier/tier'
 import type { ChatMessage } from '../model/types'
@@ -19,18 +21,22 @@ ${chalk.cyan.bold('Karigar REPL')}
 
 ${chalk.bold('Slash commands:')}
   ${chalk.yellow('/clear')}   Clear conversation history
-  ${chalk.yellow('/model')}   Show current model
+  ${chalk.yellow('/model')}   Switch model interactively
   ${chalk.yellow('/help')}    Show this help
   ${chalk.yellow('/exit')}    Exit the REPL
 `)
+}
+
+function modelLabel(override: string | null, defaultName: string): string {
+  return override ? chalk.cyan(override) : chalk.dim(`${defaultName} (auto)`)
 }
 
 export async function startRepl(): Promise<void> {
   const cfg = loadConfig()
   const session = createSession(cfg.model.name)
 
-  logger.brand('Karigar ⚒')
-  logger.dim(`Model: ${cfg.model.name}  |  Type /help for commands, Ctrl+C to exit\n`)
+  console.log(renderBanner(cfg))
+  console.log()
 
   const rl = createInterface({
     input: process.stdin,
@@ -43,7 +49,6 @@ export async function startRepl(): Promise<void> {
     process.exit(0)
   })
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     let input: string
     try {
@@ -57,10 +62,32 @@ export async function startRepl(): Promise<void> {
     // Slash commands
     if (input.startsWith('/')) {
       const cmd = input.split(' ')[0]
+
       if (cmd === '/exit') { rl.close(); break }
-      if (cmd === '/clear') { clearHistory(session); logger.dim('History cleared.'); continue }
-      if (cmd === '/model') { logger.info(`Model: ${session.model}`); continue }
+
+      if (cmd === '/clear') {
+        clearHistory(session)
+        logger.dim('History cleared.')
+        continue
+      }
+
+      if (cmd === '/model') {
+        const chosen = await pickModel(cfg, rl, session.modelOverride)
+        if (chosen === undefined) {
+          // cancelled
+        } else if (chosen === null) {
+          session.modelOverride = null
+          console.log(chalk.dim('  Model set to ') + chalk.cyan('auto') + chalk.dim(' (picks by request tier)'))
+        } else {
+          session.modelOverride = chosen
+          console.log(chalk.dim('  Model set to ') + chalk.cyan(chosen))
+        }
+        console.log()
+        continue
+      }
+
       if (cmd === '/help') { printHelp(); continue }
+
       logger.warn(`Unknown command: ${cmd}. Type /help.`)
       continue
     }
@@ -69,14 +96,17 @@ export async function startRepl(): Promise<void> {
     for (const w of warnings) logger.warn(w)
 
     const { tier } = classifyTier(input)
-    const client = createModelClient(cfg, tier)
+    const client = createModelClient(cfg, tier, session.modelOverride)
 
     const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_BASE }]
     if (systemContext) messages.push({ role: 'system', content: systemContext })
     messages.push(...session.history)
     messages.push({ role: 'user', content: cleanPrompt })
 
-    const spinner = cfg.ui.spinner ? ora({ text: 'Thinking…', color: 'cyan' }).start() : null
+    const label = modelLabel(session.modelOverride, cfg.model.name)
+    const spinner = cfg.ui.spinner
+      ? ora({ text: `Thinking… ${chalk.dim('[')}${label}${chalk.dim(']')}`, color: 'cyan' }).start()
+      : null
     let reply = ''
 
     try {

@@ -7,14 +7,12 @@ import { registerExplain } from './commands/explain'
 import { registerTest } from './commands/test'
 import { registerRefactor } from './commands/refactor'
 import { registerConnect } from './commands/connect'
+import { registerStatus } from './commands/status'
+import { registerFleet } from './commands/fleet'
 import { startRepl } from './repl/loop'
 
 export const VERSION = '0.1.0'
 
-/**
- * Build the Commander program. Kept separate from `index.ts` (the executable
- * entry) so tests can construct and inspect the program without spawning a process.
- */
 export function createProgram(): Command {
   const program = new Command()
 
@@ -24,7 +22,6 @@ export function createProgram(): Command {
     .version(VERSION, '-v, --version', 'output the current version')
     .showHelpAfterError('(add --help for additional information)')
 
-  // Command registry
   registerHello(program)
   registerAsk(program)
   registerCode(program)
@@ -33,8 +30,9 @@ export function createProgram(): Command {
   registerTest(program)
   registerRefactor(program)
   registerConnect(program)
+  registerStatus(program)
+  registerFleet(program)
 
-  // No subcommand → start interactive REPL
   program.action(async () => { await startRepl() })
 
   return program

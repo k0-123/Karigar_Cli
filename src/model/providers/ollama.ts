@@ -25,7 +25,12 @@ export class OllamaProvider implements ModelClient {
     try {
       res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          // Free ngrok tunnels serve a browser-warning interstitial unless this
+          // header is present; harmless when talking to a local Ollama.
+          'ngrok-skip-browser-warning': 'true',
+        },
         body,
       })
     } catch (err) {
