@@ -1,348 +1,72 @@
- # Karigar
+# Karigar 🛠️
 
-> Free. Self-hosted. Terminal-first AI coding agent.
+A minimal, terminal-native, streaming CLI coding assistant. No GUI, no web dashboard — just a fast, scriptable command-line tool that talks to free/local models (Ollama + Qwen 2.5 Coder to start).
 
-Karigar is a TypeScript-powered CLI coding assistant built for developers who want AI help without subscriptions, API keys, or vendor lock-in.
+> **Status:** Phase 1 — CLI Core Foundation. The harness, config, and first-run flow are in place. Model integration lands in Phase 3.
 
-Inspired by Pi's minimal architecture, Karigar keeps the core small and extends functionality through skills, workflows, and model providers.
+## Tech stack
 
----
+| Concern       | Choice                                                                              | Why                                                               |
+| ------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Runtime       | Node.js ≥ 18                                                                        | Ubiquitous, native `fetch`/streams for later phases.              |
+| Language      | TypeScript (ESM)                                                                    | Type-safe core; extensible via TS modules.                        |
+| CLI framework | [commander](https://github.com/tj/commander.js)                                     | Tiny, zero-ceremony arg parsing — fits the small-core philosophy. |
+| Build         | [tsup](https://tsup.egoist.dev)                                                     | One-command ESM bundle with auto shebang.                         |
+| Dev runner    | [tsx](https://github.com/privatenumber/tsx)                                         | Run TS directly, no build step.                                   |
+| Terminal UI   | [chalk](https://github.com/chalk/chalk), [ora](https://github.com/sindresorhus/ora) | Colors now; spinners reserved for streaming.                      |
+| Tests         | [vitest](https://vitest.dev)                                                        | Fast, TS-native, zero config.                                     |
 
-## Why Karigar?
+## Project layout
 
-Most coding assistants require:
+```
+karigar/
+├─ src/
+│  ├─ index.ts            # executable entry (shebang added at build)
+│  ├─ cli.ts              # builds the Commander program (testable)
+│  ├─ commands/
+│  │  └─ hello.ts         # `karigar hello` smoke-test command
+│  ├─ utils/
+│  │  ├─ config.ts        # home dir, first-run seed, config loader
+│  │  └─ logger.ts        # chalk logging facade
+│  └─ config/
+│     ├─ types.ts         # KarigarConfig schema
+│     └─ defaults.ts      # default settings
+├─ karigar.config.ts      # editable config template (documents every setting)
+├─ tests/
+│  └─ cli.test.ts         # vitest suite
+├─ tsup.config.ts
+├─ tsconfig.json
+└─ package.json
+```
 
-- Monthly subscriptions
-- Credit cards
-- API keys
-- Cloud dependency
-
-Karigar does not.
+## Quick start
 
 ```bash
-npm install -g karigar
+npm install          # install dependencies
+npm run dev -- --help # run from source
+npm run build         # produce dist/index.js
+npm test              # run the vitest suite
 ```
 
-Connect once:
+Install globally and run the binary:
 
 ```bash
-karigar connect https://your-server.com
+npm install -g .      # or: npm i -g karigar  once published
+karigar --help
+karigar hello
+karigar hello World --shout
 ```
 
-Start coding:
+On first run, Karigar creates `~/.karigar/config.json` from the defaults. Override the
+location with the `KARIGAR_HOME` environment variable.
 
-```bash
-karigar chat
-karigar explain
-karigar fix
-karigar test
-karigar refactor
-```
+## Configuration
 
----
+See [`karigar.config.ts`](./karigar.config.ts) for every available setting and its
+default. The runtime reads `~/.karigar/config.json`; missing fields fall back to the
+built-in defaults. **Never commit real API keys** — use the local config file or env vars.
 
-## What Makes Karigar Different?
+## Security note (Phase 1)
 
-| Feature | Karigar | Claude Code | Cursor | Aider |
-|----------|----------|----------|----------|----------|
-| Terminal First | ✅ | ✅ | ❌ | ✅ |
-| Self Hosted | ✅ | ❌ | ❌ | Partial |
-| No API Keys Required | ✅ | ❌ | ❌ | ❌ |
-| Offline Capable | ✅ | ❌ | ❌ | Partial |
-| Free Forever Path | ✅ | ❌ | ❌ | ❌ |
-| Custom Skills | ✅ | ❌ | ❌ | ❌ |
-| Open Architecture | ✅ | ❌ | ❌ | ✅ |
-
----
-
-## Core Philosophy
-
-Karigar follows a simple rule:
-
-> Own your workflow.
-
-Your models.
-
-Your server.
-
-Your skills.
-
-Your configuration.
-
-Your infrastructure.
-
-Nothing is locked behind a company account.
-
----
-
-## Features
-
-### Context Engine
-
-Bring code context directly into conversations.
-
-```bash
-@file src/auth.ts
-@diff
-@selection
-```
-
-Examples:
-
-```bash
-karigar explain @file src/server.ts
-```
-
-```bash
-karigar fix @diff
-```
-
-```bash
-karigar refactor @selection
-```
-
----
-
-### Streaming Terminal Experience
-
-Responses stream live.
-
-```text
-Analyzing...
-Reading file...
-Found issue in authentication flow...
-
-Suggested fix:
-```
-
-No waiting for full responses.
-
----
-
-### Smart Task Routing
-
-Karigar automatically classifies tasks.
-
-| Tier | Purpose |
-|--------|--------|
-| Fast | Quick answers |
-| Medium | Functions and fixes |
-| Complex | Refactors and debugging |
-| Agent | Multi-step workflows |
-
----
-
-### Built-in Workflows
-
-```bash
-karigar chat
-karigar explain
-karigar fix
-karigar test
-karigar review
-karigar refactor
-```
-
----
-
-### Skill System
-
-Install reusable capabilities.
-
-```bash
-karigar install react
-```
-
-```bash
-karigar install nextjs
-```
-
-```bash
-karigar install python
-```
-
-Future:
-
-```bash
-karigar install laravel
-karigar install rust
-karigar install docker
-```
-
----
-
-## Architecture
-
-```text
-User
- │
- ▼
-Karigar CLI
- │
- ▼
-Context Engine
-(@file @diff @selection)
- │
- ▼
-Task Classifier
- │
- ▼
-Router
- │
- ▼
-Model Provider
- │
- ├── Ollama
- ├── Oracle Cloud
- ├── Lightning AI
- ├── Kaggle
- └── Custom Providers
- │
- ▼
-Streaming Response
-```
-
----
-
-## Example
-
-Explain code:
-
-```bash
-karigar explain @file src/auth.ts
-```
-
-Fix bugs:
-
-```bash
-karigar fix @diff
-```
-
-Generate tests:
-
-```bash
-karigar test @file src/api.ts
-```
-
-Refactor:
-
-```bash
-karigar refactor @file src/database.ts
-```
-
----
-
-## Installation
-
-### Requirements
-
-- Node.js 20+
-- Git
-- Ollama (optional)
-
-### Install
-
-```bash
-npm install -g karigar
-```
-
-Verify:
-
-```bash
-karigar --version
-```
-
----
-
-## Quick Start
-
-Initialize:
-
-```bash
-karigar init
-```
-
-Chat:
-
-```bash
-karigar chat
-```
-
-Connect server:
-
-```bash
-karigar connect https://your-server.com
-```
-
----
-
-## Roadmap
-
-### Phase 1
-
-- CLI foundation
-- REPL
-- Configuration
-
-### Phase 2
-
-- Context engine
-- @file
-- @diff
-- @selection
-
-### Phase 3
-
-- Ollama integration
-- Streaming
-
-### Phase 4
-
-- Backend API
-
-### Phase 5
-
-- Remote deployment
-
-### Phase 6
-
-- Multi-provider routing
-
-### Phase 7
-
-- Skill ecosystem
-- Package manager
-
----
-
-## Vision
-
-Karigar is not trying to be Cursor.
-
-Karigar is not trying to be Claude Code.
-
-Karigar exists for developers who want:
-
-- Full ownership
-- Terminal-first workflows
-- Open architecture
-- Self-hosting
-- A free path that lasts
-
----
-
-## License
-
-MIT
-
----
-
-## Status
-
-🚧 Early Development
-
-Karigar is currently under active development.
-
-The goal is simple:
-
-Build the best free terminal coding assistant possible.
+This phase runs entirely local code: no network calls, no telemetry, no secrets. The
+config loader is hardened to fall back to defaults on a malformed file rather than crash.
