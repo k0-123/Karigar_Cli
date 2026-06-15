@@ -78,7 +78,7 @@ export const WORKER_NODES: WorkerNode[] = [
 ]
 
 export function modelForTier(tier: Tier, fastModel: string, codingModel: string): string {
-  return tier === 'fast' ? fastModel : codingModel
+  return tier === 'complex' ? codingModel : fastModel
 }
 
 export function estimateLatency(provider: string, tier: Tier): number {

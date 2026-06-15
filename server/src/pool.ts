@@ -59,7 +59,10 @@ export class WorkerPool {
   }
 
   selectNode(tier: Tier): WorkerNode | null {
-    const available = this.nodes.filter(n => n.health.healthy && n.capabilities.tier === 'complex')
+    const tierRank: Record<Tier, number> = { fast: 0, medium: 1, complex: 2 }
+    const available = this.nodes.filter(
+      n => n.health.healthy && tierRank[n.capabilities.tier] >= tierRank[tier],
+    )
 
     if (available.length === 0) {
       const any = this.nodes.find(n => n.health.healthy)

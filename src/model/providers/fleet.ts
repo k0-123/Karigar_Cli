@@ -74,7 +74,7 @@ export class FleetProvider implements ModelClient {
     }
 
     const model =
-      this.modelOverride ?? (TIER_RANK[tier] === 0 ? chosen.fastModel : chosen.codingModel)
+      this.modelOverride ?? (TIER_RANK[tier] === 2 ? chosen.codingModel : chosen.fastModel)
 
     const url = `${chosen.baseUrl}/api/chat`
     const body = JSON.stringify({

@@ -21,10 +21,21 @@ export class RemoteProvider implements ModelClient {
   }
 
   async *chat(request: ModelRequest): AsyncIterable<Token> {
+    // Pre-flight: fail fast (3s) instead of hanging for 60s
+    try {
+      const ping = await fetch(`${this.cfg.baseUrl}/health`, {
+        signal: AbortSignal.timeout(3_000),
+      })
+      if (!ping.ok) throw new Error('unhealthy')
+    } catch {
+      throw new Error(
+        `Cannot reach Karigar server at ${this.cfg.baseUrl}. Falling back to local Ollama.`,
+      )
+    }
+
     const url = `${this.cfg.baseUrl}/v1/chat`
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
 
-    // Server-issued token stored in config (no user-facing API key)
     if (this.cfg.apiKey) headers['X-Karigar-Token'] = this.cfg.apiKey
 
     const body: RemoteRequest = {
@@ -40,7 +51,7 @@ export class RemoteProvider implements ModelClient {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.timeout(30_000),
       })
     } catch (err) {
       throw new Error(

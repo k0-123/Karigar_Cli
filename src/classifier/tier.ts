@@ -46,5 +46,5 @@ export function classifyTier(prompt: string): TierResult {
 
 /** Map a tier to the recommended model name given available options. */
 export function modelForTier(tier: Tier, fastModel: string, codingModel: string): string {
-  return tier === 'fast' ? fastModel : codingModel
+  return tier === 'complex' ? codingModel : fastModel
 }
