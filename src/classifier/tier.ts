@@ -16,6 +16,9 @@ const MEDIUM_KEYWORDS = [
   'implement', 'write', 'create', 'add', 'update', 'handle', 'parse', 'format',
 ]
 
+const COMPLEX_RES = COMPLEX_KEYWORDS.map(k => new RegExp(`\\b${k}\\b`))
+const MEDIUM_RES = MEDIUM_KEYWORDS.map(k => new RegExp(`\\b${k}\\b`))
+
 export function classifyTier(prompt: string): TierResult {
   const lower = prompt.toLowerCase().trim()
   const wordCount = lower.split(/\s+/).length
@@ -26,7 +29,7 @@ export function classifyTier(prompt: string): TierResult {
   if (
     wordCount > 40 ||
     (hasCodeBlock && wordCount > 15) ||
-    COMPLEX_KEYWORDS.some(k => lower.includes(k))
+    COMPLEX_RES.some(re => re.test(lower))
   ) {
     return { tier: 'complex', reason: 'complex keywords or long prompt' }
   }
@@ -35,7 +38,7 @@ export function classifyTier(prompt: string): TierResult {
   if (
     wordCount <= 8 &&
     !hasDirective &&
-    !MEDIUM_KEYWORDS.some(k => lower.includes(k))
+    !MEDIUM_RES.some(re => re.test(lower))
   ) {
     return { tier: 'fast', reason: 'short casual prompt' }
   }

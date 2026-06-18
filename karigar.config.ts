@@ -28,7 +28,10 @@ const config: KarigarConfig = {
     color: true,
     spinner: true,
     streaming: true,
+    theme: 'artisan', // 'artisan' = full dashboard home screen | 'plain' = compact banner
+    dashboard: true, // set false to skip the dashboard in the REPL
   },
+  fleet: [], // direct GPU worker nodes; manage with `karigar fleet add/remove/list`
 }
 
 export default config

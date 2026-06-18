@@ -9,9 +9,13 @@ import { registerRefactor } from './commands/refactor'
 import { registerConnect } from './commands/connect'
 import { registerStatus } from './commands/status'
 import { registerFleet } from './commands/fleet'
+import { registerWrite } from './commands/write'
 import { startRepl } from './repl/loop'
+import { renderDashboard } from './ui/dashboard'
+import { loadConfig } from './utils/config'
+import { VERSION } from './version'
 
-export const VERSION = '0.1.0'
+export { VERSION }
 
 export function createProgram(): Command {
   const program = new Command()
@@ -29,9 +33,25 @@ export function createProgram(): Command {
   registerExplain(program)
   registerTest(program)
   registerRefactor(program)
+  registerWrite(program)
   registerConnect(program)
   registerStatus(program)
   registerFleet(program)
+
+  program
+    .command('home')
+    .description('Show the Karigar dashboard home screen.')
+    .action(() => {
+      console.log(renderDashboard(loadConfig()))
+    })
+
+  program
+    .command('hero')
+    .description('Show the Karigar hero art (craftsman before the mandir).')
+    .action(async () => {
+      const { renderKarigarHero } = await import('./art/hero')
+      console.log('\n' + renderKarigarHero() + '\n')
+    })
 
   program.action(async () => { await startRepl() })
 

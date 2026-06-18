@@ -3,6 +3,8 @@ import { readFile, readDir } from './files'
 import { getGitDiff } from './git'
 import type { KarigarConfig } from '../config/types'
 
+const MAX_DIFF_BYTES = 32_000
+
 export interface ContextBlock {
   label: string
   content: string
@@ -55,7 +57,12 @@ export function buildContext(prompt: string, config: KarigarConfig): AssembledCo
       const { diff, available } = getGitDiff()
       if (!available) { warnings.push('No git repository found for @diff'); continue }
       if (!diff) { warnings.push('@diff: no changes detected'); continue }
-      blocks.push({ label: 'Git diff (staged + unstaged)', content: diff })
+      let diffContent = diff
+      if (Buffer.byteLength(diff, 'utf8') > MAX_DIFF_BYTES) {
+        diffContent = diff.slice(0, MAX_DIFF_BYTES) + '\n… [diff truncated at 32KB]'
+        warnings.push('@diff was truncated (>32KB). Consider staging fewer files.')
+      }
+      blocks.push({ label: 'Git diff (staged + unstaged)', content: diffContent })
     }
 
     if (directive.kind === 'selection') {

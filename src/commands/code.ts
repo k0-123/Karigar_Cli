@@ -3,6 +3,7 @@ import ora from 'ora'
 import { loadConfig } from '../utils/config'
 import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
+import { classifyTier } from '../classifier/tier'
 import { PROMPTS } from '../prompts/templates'
 
 export function registerCode(program: Command): void {
@@ -12,7 +13,8 @@ export function registerCode(program: Command): void {
     .argument('<task>', 'describe what to build')
     .action(async (task: string) => {
       const cfg = loadConfig()
-      const client = createModelClient(cfg)
+      const { tier } = classifyTier(task)
+      const client = createModelClient(cfg, tier)
       const spinner = cfg.ui.spinner ? ora({ text: 'Generating…', color: 'cyan' }).start() : null
 
       try {

@@ -60,7 +60,12 @@ export class OllamaProvider implements ModelClient {
       for (const line of lines) {
         const trimmed = line.trim()
         if (!trimmed) continue
-        const chunk = JSON.parse(trimmed) as OllamaChunk
+        let chunk: OllamaChunk
+        try {
+          chunk = JSON.parse(trimmed) as OllamaChunk
+        } catch {
+          continue
+        }
         const text = chunk.message?.content ?? ''
         yield { text, done: chunk.done }
         if (chunk.done) return

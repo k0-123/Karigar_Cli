@@ -3,6 +3,7 @@ import ora from 'ora'
 import { loadConfig } from '../utils/config'
 import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
+import { classifyTier } from '../classifier/tier'
 import { buildContext } from '../context/assemble'
 import { PROMPTS } from '../prompts/templates'
 
@@ -13,9 +14,10 @@ export function registerRefactor(program: Command): void {
     .argument('[target]', 'file path to refactor')
     .action(async (target?: string) => {
       const cfg = loadConfig()
-      const client = createModelClient(cfg)
-
       const prompt = target ? `@file ${target}` : '@selection'
+      const { tier } = classifyTier(prompt)
+      const client = createModelClient(cfg, tier)
+
       const { systemContext, warnings } = buildContext(prompt, cfg)
       for (const w of warnings) logger.warn(w)
 

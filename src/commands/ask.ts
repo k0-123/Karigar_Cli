@@ -5,6 +5,7 @@ import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
 import { buildContext } from '../context/assemble'
 import { classifyTier } from '../classifier/tier'
+import { SYSTEM_BASE } from '../prompts/templates'
 
 export function registerAsk(program: Command): void {
   program
@@ -20,7 +21,9 @@ export function registerAsk(program: Command): void {
 
       for (const w of warnings) logger.warn(w)
 
-      const messages: { role: 'system' | 'user'; content: string }[] = []
+      const messages: { role: 'system' | 'user'; content: string }[] = [
+        { role: 'system', content: SYSTEM_BASE },
+      ]
       if (systemContext) messages.push({ role: 'system', content: systemContext })
       messages.push({ role: 'user', content: cleanPrompt })
 

@@ -1,6 +1,7 @@
 import type { ModelClient, ModelRequest, Token } from '../types'
 import type { FleetNode } from '../../config/types'
 import type { Tier } from '../../classifier/tier'
+import { modelForTier } from '../../classifier/tier'
 
 const HEALTH_TIMEOUT_MS = 4_000
 const STREAM_TIMEOUT_MS = 60_000
@@ -73,8 +74,19 @@ export class FleetProvider implements ModelClient {
       )
     }
 
+    // Warn if we're degrading to a weaker model due to node failure
+    const downNode = results.find(r => r.node.tier === 'complex' && !r.healthy)
+    if (tier === 'complex' && chosen.tier !== 'complex' && downNode) {
+      console.warn(`⚠  ${downNode.node.id} is down — using ${chosen.id}'s ${chosen.codingModel} instead of ${downNode.node.codingModel}`)
+    }
+
     const model =
-      this.modelOverride ?? (TIER_RANK[tier] === 2 ? chosen.codingModel : chosen.fastModel)
+      this.modelOverride ?? modelForTier(tier, chosen.fastModel, chosen.codingModel)
+
+    // Debug: show which model is being used
+    if (process.env.DEBUG_MODEL) {
+      console.log(`[DEBUG] Using ${model} from ${chosen.id} (tier: ${tier})`)
+    }
 
     const url = `${chosen.baseUrl}/api/chat`
     const body = JSON.stringify({
@@ -126,7 +138,12 @@ export class FleetProvider implements ModelClient {
       for (const line of lines) {
         const trimmed = line.trim()
         if (!trimmed) continue
-        const chunk = JSON.parse(trimmed) as OllamaChunk
+        let chunk: OllamaChunk
+        try {
+          chunk = JSON.parse(trimmed) as OllamaChunk
+        } catch {
+          continue
+        }
         const text = chunk.message?.content ?? ''
         yield { text, done: chunk.done }
         if (chunk.done) return

@@ -7,20 +7,37 @@ interface OllamaTag {
   size: number
 }
 
-/** Query a fleet node (or local Ollama) for the list of installed models. */
+/** Query all fleet nodes (or local Ollama) for the list of installed models. */
 async function listModels(cfg: KarigarConfig): Promise<string[]> {
-  const baseUrl = cfg.fleet?.[0]?.baseUrl ?? cfg.model.baseUrl ?? 'http://localhost:11434'
-  try {
-    const res = await fetch(`${baseUrl}/api/tags`, {
-      signal: AbortSignal.timeout(5_000),
-      headers: { 'ngrok-skip-browser-warning': 'true' },
+  const nodes = cfg.fleet?.length
+    ? cfg.fleet
+    : [{ baseUrl: cfg.model.baseUrl ?? 'http://localhost:11434' }]
+
+  const results = await Promise.all(
+    nodes.map(async node => {
+      try {
+        const res = await fetch(`${node.baseUrl}/api/tags`, {
+          signal: AbortSignal.timeout(5_000),
+          headers: { 'ngrok-skip-browser-warning': 'true' },
+        })
+        if (!res.ok) return []
+        const data = (await res.json()) as { models?: OllamaTag[] }
+        return (data.models ?? []).map(m => m.name)
+      } catch {
+        return []
+      }
     })
-    if (!res.ok) return []
-    const data = (await res.json()) as { models?: OllamaTag[] }
-    return (data.models ?? []).map(m => m.name)
-  } catch {
-    return []
+  )
+
+  // Deduplicate while preserving order
+  const seen = new Set<string>()
+  const merged: string[] = []
+  for (const list of results) {
+    for (const name of list) {
+      if (!seen.has(name)) { seen.add(name); merged.push(name) }
+    }
   }
+  return merged
 }
 
 /**

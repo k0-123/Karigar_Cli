@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Shop</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #ffffff;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .abstract-machine {
+            position: fixed;
+            width: 300px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .slide-in {
+            animation: slide 0.5s ease-out forwards;
+        }
+
+        @keyframes slide {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+                preserve-3d: preserve-3d;
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                preserve-3d: preserve-3d;
+            }
+        }
+
+        .coffee-flow {
+            position: relative;
+            height: 200px;
+            margin-bottom: 20px;
+        }
+
+        .flow-beam {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            max-width: 100px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 0.3;
+                transform: translate(-50%, -50%);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        #click-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            pointer-events: none;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enjoy your Morning Cup of coffee</h1>
+
+    <div class="abstract-machine">
+        <div class="coffee-flow" id="coffee-flow"></div>
+        <div class="flow-beam" role="button" data-action="show-coffee">Show Coffee</div>
+    </div>
+
+    <script>
+        // Animation for when you click anywhere
+        document.addEventListener('click', function() {
+            if (event.target === #coffee-flow) {
+                this.classList.add('animate-coffee');
+            } else {
+                this.classList.remove('animate-coffee');
+            }
+            
+            // Add any other animations here
+        });
+
+        // Animation for showing coffee when clicked
+        const showCoffee = document.getElementById('show-coffee');
+        function toggleShowCoffee() {
+            showCoffee.classList.toggle('animate-coffee');
+        }
+
+        // Create the abstract machine animation
+        const animateMachine = () => {
+            const flow = document.getElementById('coffee-flow');
+            let alpha = 0.5;
+            
+            alpha -= (alpha * 2) / 3;
+            const opacity = `rgba(68, 130, 247, ${alpha})`;
+            
+            return (
+                <div class="flow-beam" data-action="animate-coffee">
+                    <div class="coffee-flow" id="coffee-flow"></div>
+                    <div class="flow-beam" role="button" data-action="show-coffee" aria-label="Click to see coffee">Click for details</div>
+                </div>
+                <style>
+                    .flow-beam { transform: translate(${-50%}, ${-50%}) }
+                </style>
+            );
+        };
+        
+        // Animation loop
+        animateMachine();
+        
+        // Interactive show-coffee button
+        showCoffee.addEventListener('click', function() {
+            toggleShowCoffee();
+        });
+    </script>
+</body>
+</html>

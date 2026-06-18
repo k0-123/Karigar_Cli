@@ -16,6 +16,8 @@ export const defaultConfig: KarigarConfig = {
     color: true,
     spinner: true,
     streaming: true,
+    theme: 'artisan',
+    dashboard: true,
   },
   fleet: [],
 }

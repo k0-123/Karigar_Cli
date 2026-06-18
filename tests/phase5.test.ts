@@ -51,8 +51,10 @@ describe('classifyTier', () => {
   })
 
   it('modelForTier maps fast vs others', () => {
+    // Only the complex tier uses the heavier coding model; fast and medium use
+    // the fast model (see "route medium tier to fastModel" change).
     expect(modelForTier('fast', 'deepseek-r1:1.5b', 'qwen2.5-coder:14b')).toBe('deepseek-r1:1.5b')
-    expect(modelForTier('medium', 'deepseek-r1:1.5b', 'qwen2.5-coder:14b')).toBe('qwen2.5-coder:14b')
+    expect(modelForTier('medium', 'deepseek-r1:1.5b', 'qwen2.5-coder:14b')).toBe('deepseek-r1:1.5b')
     expect(modelForTier('complex', 'deepseek-r1:1.5b', 'qwen2.5-coder:14b')).toBe('qwen2.5-coder:14b')
   })
 })

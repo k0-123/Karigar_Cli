@@ -3,6 +3,7 @@ import ora from 'ora'
 import { loadConfig } from '../utils/config'
 import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
+import { classifyTier } from '../classifier/tier'
 import { buildContext } from '../context/assemble'
 import { PROMPTS } from '../prompts/templates'
 import { runWithConfirm } from '../runner/exec'
@@ -15,9 +16,10 @@ export function registerFix(program: Command): void {
     .option('-r, --run <cmd>', 'verification command to run after the fix is shown')
     .action(async (target: string | undefined, opts: { run?: string }) => {
       const cfg = loadConfig()
-      const client = createModelClient(cfg)
-
       const prompt = target ? `@file ${target}` : '@diff'
+      const { tier } = classifyTier(prompt)
+      const client = createModelClient(cfg, tier)
+
       const { systemContext, warnings } = buildContext(prompt, cfg)
       for (const w of warnings) logger.warn(w)
 

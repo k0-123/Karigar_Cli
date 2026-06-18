@@ -3,6 +3,7 @@ import ora from 'ora'
 import { loadConfig } from '../utils/config'
 import { logger } from '../utils/logger'
 import { createModelClient } from '../model/client'
+import { classifyTier } from '../classifier/tier'
 import { buildContext } from '../context/assemble'
 import { PROMPTS } from '../prompts/templates'
 import { runWithConfirm } from '../runner/exec'
@@ -15,9 +16,10 @@ export function registerTest(program: Command): void {
     .option('-r, --run <cmd>', 'run command after tests are shown (e.g. "npm test")')
     .action(async (target: string | undefined, opts: { run?: string }) => {
       const cfg = loadConfig()
-      const client = createModelClient(cfg)
-
       const prompt = target ? `@file ${target}` : '@selection'
+      const { tier } = classifyTier(prompt)
+      const client = createModelClient(cfg, tier)
+
       const { systemContext, warnings } = buildContext(prompt, cfg)
       for (const w of warnings) logger.warn(w)
 

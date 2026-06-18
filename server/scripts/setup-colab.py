@@ -18,7 +18,7 @@ else:
 # Install Ollama
 print("\nInstalling Ollama...")
 subprocess.run(['apt-get', 'update', '-qq'], capture_output=True)
-subprocess.run(['apt-get', 'install', '-y', '-qq', 'curl'], capture_output=True)
+subprocess.run(['apt-get', 'install', '-y', '-qq', 'curl', 'zstd'], capture_output=True)
 result = subprocess.run(['bash', '-c', 'curl -fsSL https://ollama.ai/install.sh | sh'], capture_output=True)
 if result.returncode == 0:
     print("✓ Ollama installed")
